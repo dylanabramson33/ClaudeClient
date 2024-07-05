@@ -11,7 +11,7 @@ import tiktoken
 
 
 class ClaudeClient:
-    def __init__(self, template_file=None, max_tokens=1024):
+    def __init__(self, template_file=None, max_tokens=4096):
         self.template = None
         if template_file:
             with open(template_file) as f:
@@ -33,7 +33,7 @@ class ClaudeClient:
         
         response = self.client.messages.create(
             model="claude-3-5-sonnet-20240620",
-            max_tokens=1024,
+            max_tokens=self.max_tokens,
             messages=[
                 {"role": "user", "content": q}
             ]
