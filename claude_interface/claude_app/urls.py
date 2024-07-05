@@ -1,12 +1,8 @@
-from django.contrib import admin
 from django.urls import path
-from . views import query_claude
-from . views import view_logs
+from .views import pymol_interface, load_pdb, query_claude_and_run_pymol
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', query_claude, name='query_claude'),
-    path('logs/', view_logs, name='view_logs'),
+    path('', pymol_interface, name='pymol_interface'),
+    path('load_pdb/', load_pdb, name='load_pdb'),
+    path('query_claude_and_run_pymol/', query_claude_and_run_pymol, name='query_claude_and_run_pymol'),
 ]
-
-

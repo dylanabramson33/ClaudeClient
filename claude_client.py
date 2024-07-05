@@ -30,7 +30,7 @@ class ClaudeClient:
 
     def query(self, **kwargs):
         q = self.build_query(**kwargs)
-        
+        print(q)
         response = self.client.messages.create(
             model="claude-3-5-sonnet-20240620",
             max_tokens=self.max_tokens,

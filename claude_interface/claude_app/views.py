@@ -1,76 +1,130 @@
-import os
+import json
 from django.shortcuts import render
-from django.conf import settings
-from .forms import ClaudeQueryForm
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
+from django.http import JsonResponse
+from .forms import LoadPDBForm, PyMOLQueryForm
 from claude_client import ClaudeClient
-from django.utils.safestring import mark_safe
-from django.shortcuts import render
-from django.core.paginator import Paginator
-from django.conf import settings
+import xmlrpc.client
 import os
+from django.core.cache import cache
+from django.conf import settings
 
-def query_claude(request):
+pymol = xmlrpc.client.ServerProxy('http://localhost:9123')
+# Add this function to get the template path
+def get_template_path():
+    return "/Users/dylanabramson/Desktop/Claude/templates/pymol.jinja"
+
+def pymol_interface(request):
+    load_form = LoadPDBForm()
+    query_form = PyMOLQueryForm()
+    chat_history = cache.get('chat_history', [])
+    return render(request, 'claude_app/pymol_interface.html', {
+        'load_form': load_form,
+        'query_form': query_form,
+        'chat_history': chat_history
+    })
+
+def load_pdb(request):
     if request.method == 'POST':
-        form = ClaudeQueryForm(request.POST, request.FILES)
+        form = LoadPDBForm(request.POST)
         if form.is_valid():
-            client = ClaudeClient()
-            params = {}
+            pdb_id = form.cleaned_data['pdb_id']
+            try:
+                pymol.do(f"fetch {pdb_id}")
+                pdb_dir = os.path.join(settings.BASE_DIR, 'claude_app', 'static', 'pdb_files')
+                os.makedirs(pdb_dir, exist_ok=True)
+                pdb_filename = f'{pdb_id}.pdb'
+                pdb_path = os.path.join(pdb_dir, pdb_filename)
+                pymol.do(f"save {pdb_path}")
+                
+                cache.set('current_pdb_id', pdb_id)
+                cache.set('current_pdb_path', pdb_path)
+                # Clear previous query history and chat history when loading a new PDB
+                cache.set('query_history', [])
+                cache.set('chat_history', [])
+                return JsonResponse({'success': True, 'message': f'PDB {pdb_id} loaded successfully'})
+            except Exception as e:
+                return JsonResponse({'success': False, 'message': str(e)})
+    return JsonResponse({'success': False, 'message': 'Invalid request'})
 
-            if form.cleaned_data['query']:
-                params['query'] = form.cleaned_data['query']
+def query_claude_and_run_pymol(request):
+    if request.method == 'POST':
+        form = PyMOLQueryForm(request.POST)
+        if form.is_valid():
+            client = ClaudeClient(template_file=get_template_path())
+            query = form.cleaned_data['query']
 
-            if form.cleaned_data['template']:
-                template_file = form.cleaned_data['template']
-                template_path = default_storage.save('templates/temp_template.txt', ContentFile(template_file.read()))
-                client.template_file = os.path.join(settings.MEDIA_ROOT, template_path)
+            current_pdb_id = cache.get('current_pdb_id', 'Unknown')
+            current_pdb_path = cache.get('current_pdb_path', None)
+            query_history = cache.get('query_history', [])
+            chat_history = cache.get('chat_history', [])
 
-            for field in form.param_fields:
-                if form.cleaned_data[field]:
-                    key, value = form.cleaned_data[field].split(':', 1)
-                    params[key.strip()] = value.strip()
+            # Load PDB file content
+            pdb_content = ''
+            if current_pdb_path and os.path.exists(current_pdb_path):
+                with open(current_pdb_path, 'r') as pdb_file:
+                    pdb_content = pdb_file.read()
 
-            if form.cleaned_data['pdf_file']:
-                pdf_file = form.cleaned_data['pdf_file']
-                pdf_path = default_storage.save('pdfs/temp_pdf.pdf', ContentFile(pdf_file.read()))
-                pdf_content = client.parse_pdf(os.path.join(settings.MEDIA_ROOT, pdf_path), form.cleaned_data['pdf_range'])
-                params['pdf_content'] = pdf_content
+            # Append current query history to the context
+            context = {
+                'query': query,
+                'pdb_id': current_pdb_id,
+                'query_history': query_history,
+            }
 
-            if form.cleaned_data['estimate_cost']:
-                query = client.build_query(**params)
-                token_count = len(client.tokenizer.encode(query))
-                response = client.query(**params)
-                output_token_count = len(client.tokenizer.encode(response))
-                cost = client.estimate_cost(query, token_count, output_token_count, client.tokenizer)
-                result = f"Estimated cost: ${cost:.2f}"
-            else:
-                result = client.query(**params)
+            claude_response = client.query(**context)
 
-            if form.cleaned_data['json_output']:
-                result = client.parse_json(result)
-            safe_result = mark_safe(result)
-            return render(request, 'claude_app/result.html', {'result': safe_result})
-    else:
-        form = ClaudeQueryForm()
+            try:
+                response_data = json.loads(claude_response)
+                pymol_commands = response_data['commands']
+                explanation = response_data['explanation']
+                pymol_results = execute_pymol_commands(pymol_commands)
 
-    return render(request, 'claude_app/query_form.html', {'form': form})
+                # Save the current state as a PDB file
+                pdb_dir = os.path.join(settings.BASE_DIR, 'claude_app', 'static', 'pdb_files')
+                os.makedirs(pdb_dir, exist_ok=True)
+                pdb_filename = f'{current_pdb_id}_modified.pdb'
+                pdb_path = os.path.join(pdb_dir, pdb_filename)
+                pymol.do(f"save {pdb_path}")
 
+                # Update query history
+                query_history.append({
+                    'query': query,
+                    'explanation': explanation,
+                    'commands': pymol_commands
+                })
+                cache.set('query_history', query_history)
 
-def view_logs(request):
-    logs_file = getattr(settings, 'CLAUDE_LOGS_FILE', './logs.txt')
-    
-    if not os.path.exists(logs_file):
-        return render(request, 'claude_app/logs.html', {'error': 'Logs file not found.'})
+                # Update chat history
+                chat_history.append({
+                    'role': 'user',
+                    'content': query
+                })
+                chat_history.append({
+                    'role': 'assistant',
+                    'content': explanation,
+                    'commands': pymol_commands
+                })
+                cache.set('chat_history', chat_history)
 
-    with open(logs_file, 'r') as file:
-        logs = file.read().split('='*80)
-        logs = [log.strip() for log in logs if log.strip()]
+                return JsonResponse({
+                    'explanation': explanation,
+                    'pymol_results': pymol_results,
+                    'current_pdb_id': current_pdb_id,
+                    'pdb_path': f'/static/pdb_files/{pdb_filename}',
+                    'chat_history': chat_history
+                })
+            except json.JSONDecodeError:
+                return JsonResponse({'error': 'Invalid response from Claude'}, status=400)
 
-    logs.reverse()  # Show most recent logs first
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
-    paginator = Paginator(logs, 10)  # Show 10 logs per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    return render(request, 'claude_app/logs.html', {'page_obj': page_obj})
+def execute_pymol_commands(commands):
+    results = []
+    for cmd in commands:
+        try:
+            pymol.do(cmd)
+            results.append(f"Command: {cmd}")
+        except Exception as e:
+            print(e)
+            results.append(f"Command: {cmd}\nError: {str(e)}")
+    return results
