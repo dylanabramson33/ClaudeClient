@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Immediately set dark mode if it's saved in localStorage
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Claude Interface{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f5f5;
+            --border-color: #e0e0e0;
+            --input-bg: #ffffff;
+            --input-text: #333333;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            transition: all 0.3s ease;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: var(--primary-color);
+        }
+        input[type="text"], input[type="file"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--input-bg);
+            color: var(--input-text);
+        }
+        button, input[type="submit"] {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover, input[type="submit"]:hover {
+            background-color: #3a7bd5;
+        }
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--secondary-color);
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .dark-mode {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --primary-color: #61afef;
+            --secondary-color: #2c2c2c;
+            --border-color: #4a4a4a;
+            --input-bg: #2c2c2c;
+            --input-text: #e0e0e0;
+        }
+        .dark-mode button, .dark-mode input[type="submit"] {
+            background-color: var(--primary-color);
+            color: #1a1a1a;
+        }
+        .dark-mode button:hover, .dark-mode input[type="submit"]:hover {
+            background-color: #4d8ecc;
+        }
+        .dark-mode .dark-mode-toggle {
+            background-color: #4a4a4a;
+            color: #e0e0e0;
+        }
+        .log-entry {
+            background-color: var(--secondary-color);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .log-entry pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination a {
+            color: var(--primary-color);
+            padding: 5px 10px;
+            text-decoration: none;
+        }
+        .pagination .current {
+            font-weight: bold;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+    <button class="dark-mode-toggle" id="darkModeToggle" aria-label="Toggle dark mode">🌓</button>
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+        
+        // Function to set dark mode
+        function setDarkMode(isDark) {
+            if (isDark) {
+                body.classList.add('dark-mode');
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                body.classList.remove('dark-mode');
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+        
+        // Check for saved dark mode preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            setDarkMode(true);
+        }
+        
+        // Toggle dark mode
+        darkModeToggle.addEventListener('click', () => {
+            if (body.classList.contains('dark-mode')) {
+                setDarkMode(false);
+            } else {
+                setDarkMode(true);
+            }
+        });
+    </script>
+    {% block extra_js %}
+    {% endblock %}
+</body>
+</html>

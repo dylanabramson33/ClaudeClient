@@ -1,0 +1,9 @@
+{% extends 'claude_app/base.html' %}
+
+{% block title %}Claude Query Result{% endblock %}
+
+{% block content %}
+    <h1>Query Result</h1>
+    <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ result }}</pre>
+    <a href="{% url 'query_claude' %}">New Query</a>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'claude_app/base.html' %}
+
+{% block title %}Claude Query Interface{% endblock %}
+
+{% block content %}
+    <h1>Claude Query Interface</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="button" id="add-param">Add Parameter</button>
+        <input type="submit" value="Submit Query">
+    </form>
+
+    <p>
+        <a href="{% url 'view_logs' %}">View Logs</a>
+    </p>
+
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        document.getElementById('add-param').addEventListener('click', function() {
+            var form = document.querySelector('form');
+            var newField = document.createElement('p');
+            var fieldCount = document.querySelectorAll('input[name^="param_"]').length;
+            newField.innerHTML = '<label for="id_param_' + fieldCount + '">Parameter:</label> ' +
+                                 '<input type="text" name="param_' + fieldCount + '" id="id_param_' + fieldCount + '">';
+            form.insertBefore(newField, this);
+        });
+    </script>
+{% endblock %}
