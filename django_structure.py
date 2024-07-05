@@ -69,45 +69,64 @@ def output_project_structure(project_structure):
 import json
 import os
 
-def update_files_from_diff(original_json, diff_json):
-    # Load the original and diff JSON data
-    original = json.loads(original_json)
-    diff = json.loads(diff_json)
+def apply_diff(original, diff, base_dir):
 
-    # Function to recursively update nested dictionaries
-    def update_dict(original, updates):
-        for key, value in updates.items():
-            if isinstance(value, dict) and key in original:
-                update_dict(original[key], value)
-            else:
-                original[key] = value
+    def apply_file_diff(file_path, file_content, file_diff):
+        if isinstance(file_content, str):
+            lines = file_content.split('\n')
+        else:
+            lines = file_content['content'].split('\n')
 
-    # Update the original data with the diff
-    update_dict(original, diff)
+        if 'insert' in file_diff:
+            for insert in file_diff['insert']:
+                if 'after' in insert:
+                    index = next(i for i, line in enumerate(lines) if insert['after'] in line)
+                    lines.insert(index + 1, insert['text'])
+                elif 'position' in insert and insert['position'] == 'new_file':
+                    lines = insert['text'].split('\n')
 
-    # Function to write content to a file
-    def write_file(path, content):
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, 'w') as f:
+        if 'modify' in file_diff:
+            for modify in file_diff['modify']:
+                index = next(i for i, line in enumerate(lines) if modify['find'] in line)
+                lines[index] = modify['replace']
+
+        content = '\n'.join(lines)
+
+        # Actually write the changes to the file
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'w') as f:
             f.write(content)
 
-    # Update the files
-    for app_name, app_data in original.items():
-        if isinstance(app_data, dict):
-            if "__files__" in app_data:
-                for file_info in app_data["__files__"]:
-                    file_path = os.path.join(app_name, file_info["name"])
-                    write_file(file_path, file_info["content"])
-            
-            if "templates" in app_data:
-                for template_app, template_data in app_data["templates"].items():
-                    if "__files__" in template_data:
-                        for file_info in template_data["__files__"]:
-                            file_path = os.path.join(app_name, "templates", template_app, file_info["name"])
-                            write_file(file_path, file_info["content"])
+        return content
+
+    for app_name, app_data in diff.items():
+        if '__files__' in app_data:
+            for file_info in app_data['__files__']:
+                file_name = file_info['name']
+                file_diff = file_info['content']
+                file_path = os.path.join(base_dir, app_name, file_name)
+                original_file = next(f for f in original[app_name]['__files__'] if f['name'] == file_name)
+                original_file['content'] = apply_file_diff(file_path, original_file['content'], file_diff)
+
+        if 'templates' in app_data:
+            for template_app, template_data in app_data['templates'].items():
+                if '__files__' in template_data:
+                    for file_info in template_data['__files__']:
+                        file_name = file_info['name']
+                        file_diff = file_info['content']
+                        file_path = os.path.join(base_dir, app_name, 'templates', template_app, file_name)
+                        original_template = next((f for f in original[app_name]['templates'][template_app]['__files__'] if f['name'] == file_name), None)
+                        if original_template is None:
+                            original[app_name]['templates'][template_app]['__files__'].append({
+                                'name': file_name,
+                                'content': apply_file_diff(file_path, '', file_diff)
+                            })
+                        else:
+                            original_template['content'] = apply_file_diff(file_path, original_template['content'], file_diff)
 
     print("Files updated successfully!")
-# Usage
+    return json.dumps(original, indent=2)
+    
 django_project_path = 'claude_interface'
 project_structure = get_django_project_structure(django_project_path)
 diff = {
@@ -115,15 +134,50 @@ diff = {
     "__files__": [
       {
         "name": "views.py",
-        "content": "import os\nfrom django.shortcuts import render\nfrom django.conf import settings\nfrom .forms import ClaudeQueryForm, PDBUploadForm\nfrom django.core.files.storage import default_storage\nfrom django.core.files.base import ContentFile\nfrom claude_client import ClaudeClient\nfrom django.utils.safestring import mark_safe\nfrom django.shortcuts import render\nfrom django.core.paginator import Paginator\nfrom django.conf import settings\nimport os\n\ndef query_claude(request):\n    if request.method == 'POST':\n        form = ClaudeQueryForm(request.POST, request.FILES)\n        if form.is_valid():\n            # ... (existing code remains unchanged)\n    else:\n        form = ClaudeQueryForm()\n\n    pdb_form = PDBUploadForm()\n    return render(request, 'claude_app/query_form.html', {'form': form, 'pdb_form': pdb_form})\n\n# ... (existing view_logs function remains unchanged)\n\ndef view_pdb(request):\n    if request.method == 'POST':\n        form = PDBUploadForm(request.POST, request.FILES)\n        if form.is_valid():\n            pdb_file = form.cleaned_data['pdb_file']\n            pdb_path = default_storage.save('pdbs/temp_pdb.pdb', ContentFile(pdb_file.read()))\n            pdb_url = default_storage.url(pdb_path)\n            return render(request, 'claude_app/view_pdb.html', {'pdb_url': pdb_url})\n    return render(request, 'claude_app/query_form.html', {'error': 'Invalid PDB file'})"
+        "content": {
+          "insert": [
+            {
+              "after": "from .forms import ClaudeQueryForm",
+              "text": ", PDBUploadForm"
+            },
+            {
+              "after": "    return render(request, 'claude_app/query_form.html', {'form': form})",
+              "text": "\n\ndef view_pdb(request):\n    if request.method == 'POST':\n        form = PDBUploadForm(request.POST, request.FILES)\n        if form.is_valid():\n            pdb_file = form.cleaned_data['pdb_file']\n            pdb_path = default_storage.save('pdbs/temp_pdb.pdb', ContentFile(pdb_file.read()))\n            pdb_url = default_storage.url(pdb_path)\n            return render(request, 'claude_app/view_pdb.html', {'pdb_url': pdb_url})\n    return render(request, 'claude_app/query_form.html', {'error': 'Invalid PDB file'})"
+            }
+          ],
+          "modify": [
+            {
+              "find": "    return render(request, 'claude_app/query_form.html', {'form': form})",
+              "replace": "    pdb_form = PDBUploadForm()\n    return render(request, 'claude_app/query_form.html', {'form': form, 'pdb_form': pdb_form})"
+            }
+          ]
+        }
       },
       {
         "name": "forms.py",
-        "content": "from django import forms\n\nclass ClaudeQueryForm(forms.Form):\n    # ... (existing code remains unchanged)\n\nclass PDBUploadForm(forms.Form):\n    pdb_file = forms.FileField(label='Upload PDB File')"
+        "content": {
+          "insert": [
+            {
+              "after": "        self.param_fields.append(field_name)",
+              "text": "\n\nclass PDBUploadForm(forms.Form):\n    pdb_file = forms.FileField(label='Upload PDB File')"
+            }
+          ]
+        }
       },
       {
         "name": "urls.py",
-        "content": "from django.contrib import admin\nfrom django.urls import path\nfrom . views import query_claude, view_logs, view_pdb\n\nurlpatterns = [\n    path('admin/', admin.site.urls),\n    path('', query_claude, name='query_claude'),\n    path('logs/', view_logs, name='view_logs'),\n    path('view_pdb/', view_pdb, name='view_pdb'),\n]\n"
+        "content": {
+          "modify": [
+            {
+              "find": "from . views import query_claude",
+              "replace": "from . views import query_claude, view_pdb"
+            },
+            {
+              "find": "    path('logs/', view_logs, name='view_logs'),",
+              "replace": "    path('logs/', view_logs, name='view_logs'),\n    path('view_pdb/', view_pdb, name='view_pdb'),"
+            }
+          ]
+        }
       }
     ],
     "templates": {
@@ -131,20 +185,41 @@ diff = {
         "__files__": [
           {
             "name": "query_form.html",
-            "content": "{% extends 'claude_app/base.html' %}\n\n{% block title %}Claude Query Interface{% endblock %}\n\n{% block content %}\n    <h1>Claude Query Interface</h1>\n    <ul class=\"nav nav-tabs\" id=\"myTab\" role=\"tablist\">\n        <li class=\"nav-item\" role=\"presentation\">\n            <button class=\"nav-link active\" id=\"query-tab\" data-bs-toggle=\"tab\" data-bs-target=\"#query\" type=\"button\" role=\"tab\" aria-controls=\"query\" aria-selected=\"true\">Query</button>\n        </li>\n        <li class=\"nav-item\" role=\"presentation\">\n            <button class=\"nav-link\" id=\"pdb-tab\" data-bs-toggle=\"tab\" data-bs-target=\"#pdb\" type=\"button\" role=\"tab\" aria-controls=\"pdb\" aria-selected=\"false\">PDB Upload</button>\n        </li>\n    </ul>\n    <div class=\"tab-content\" id=\"myTabContent\">\n        <div class=\"tab-pane fade show active\" id=\"query\" role=\"tabpanel\" aria-labelledby=\"query-tab\">\n            <form method=\"post\" enctype=\"multipart/form-data\">\n                {% csrf_token %}\n                {{ form.as_p }}\n                <button type=\"button\" id=\"add-param\">Add Parameter</button>\n                <input type=\"submit\" value=\"Submit Query\">\n            </form>\n        </div>\n        <div class=\"tab-pane fade\" id=\"pdb\" role=\"tabpanel\" aria-labelledby=\"pdb-tab\">\n            <form method=\"post\" action=\"{% url 'view_pdb' %}\" enctype=\"multipart/form-data\">\n                {% csrf_token %}\n                {{ pdb_form.as_p }}\n                <input type=\"submit\" value=\"Upload PDB\">\n            </form>\n        </div>\n    </div>\n\n    <p>\n        <a href=\"{% url 'view_logs' %}\">View Logs</a>\n    </p>\n\n{% endblock %}\n\n{% block extra_js %}\n    <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js\"></script>\n    <script>\n        // ... (existing JavaScript code remains unchanged)\n    </script>\n{% endblock %}\n"
+            "content": {
+              "modify": [
+                {
+                  "find": "<h1>Claude Query Interface</h1>",
+                  "replace": "<h1>Claude Query Interface</h1>\n    <ul class=\"nav nav-tabs\" id=\"myTab\" role=\"tablist\">\n        <li class=\"nav-item\" role=\"presentation\">\n            <button class=\"nav-link active\" id=\"query-tab\" data-bs-toggle=\"tab\" data-bs-target=\"#query\" type=\"button\" role=\"tab\" aria-controls=\"query\" aria-selected=\"true\">Query</button>\n        </li>\n        <li class=\"nav-item\" role=\"presentation\">\n            <button class=\"nav-link\" id=\"pdb-tab\" data-bs-toggle=\"tab\" data-bs-target=\"#pdb\" type=\"button\" role=\"tab\" aria-controls=\"pdb\" aria-selected=\"false\">PDB Upload</button>\n        </li>\n    </ul>\n    <div class=\"tab-content\" id=\"myTabContent\">\n        <div class=\"tab-pane fade show active\" id=\"query\" role=\"tabpanel\" aria-labelledby=\"query-tab\">"
+                },
+                {
+                  "find": "    </form>",
+                  "replace": "    </form>\n        </div>\n        <div class=\"tab-pane fade\" id=\"pdb\" role=\"tabpanel\" aria-labelledby=\"pdb-tab\">\n            <form method=\"post\" action=\"{% url 'view_pdb' %}\" enctype=\"multipart/form-data\">\n                {% csrf_token %}\n                {{ pdb_form.as_p }}\n                <input type=\"submit\" value=\"Upload PDB\">\n            </form>\n        </div>\n    </div>"
+                }
+              ],
+              "insert": [
+                {
+                  "after": "{% block extra_js %}",
+                  "text": "\n    <script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js\"></script>"
+                }
+              ]
+            }
           },
           {
             "name": "view_pdb.html",
-            "content": "{% extends 'claude_app/base.html' %}\n\n{% block title %}PDB Viewer{% endblock %}\n\n{% block content %}\n    <h1>PDB Viewer</h1>\n    <div id=\"viewport\" style=\"width:100%; height:400px;\"></div>\n    <script src=\"https://unpkg.com/ngl@0.10.4/dist/ngl.js\"></script>\n    <script>\n        document.addEventListener(\"DOMContentLoaded\", function() {\n            var stage = new NGL.Stage(\"viewport\");\n            stage.loadFile(\"{{ pdb_url }}\", {defaultRepresentation: true});\n        });\n    </script>\n{% endblock %}"
-          },
-          {
-            "name": "base.html",
-            "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <!-- ... (existing head content remains unchanged) -->\n    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\">\n    <style>\n        /* ... (existing styles remain unchanged) */\n    </style>\n</head>\n<body>\n    <!-- ... (existing body content remains unchanged) -->\n</body>\n</html>"
+            "content": {
+              "insert": [
+                {
+                  "position": "new_file",
+                  "text": "{% extends 'claude_app/base.html' %}\n\n{% block title %}PDB Viewer{% endblock %}\n\n{% block content %}\n    <h1>PDB Viewer</h1>\n    <div id=\"viewport\" style=\"width:100%; height:400px;\"></div>\n    <script src=\"https://unpkg.com/ngl@0.10.4/dist/ngl.js\"></script>\n    <script>\n        document.addEventListener(\"DOMContentLoaded\", function() {\n            var stage = new NGL.Stage(\"viewport\");\n            stage.loadFile(\"{{ pdb_url }}\", {defaultRepresentation: true});\n        });\n    </script>\n{% endblock %}"
+                }
+              ]
+            }
           }
         ]
       }
     }
   }
 }
-output_project_structure(project_structure)
-update_files_from_diff(project_structure,diff)
+
+original_json = output_project_structure(project_structure)
+updated_json = apply_diff(original_json, json.dumps(diff), django_project_path)
