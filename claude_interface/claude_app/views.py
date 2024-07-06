@@ -58,13 +58,6 @@ def query_claude_and_run_pymol(request):
             query_history = cache.get('query_history', [])
             chat_history = cache.get('chat_history', [])
 
-            # Load PDB file content
-            pdb_content = ''
-            if current_pdb_path and os.path.exists(current_pdb_path):
-                with open(current_pdb_path, 'r') as pdb_file:
-                    pdb_content = pdb_file.read()
-
-            # Append current query history to the context
             context = {
                 'query': query,
                 'pdb_id': current_pdb_id,
@@ -72,51 +65,49 @@ def query_claude_and_run_pymol(request):
             }
 
             claude_response = client.query(**context)
-
             try:
                 response_data = json.loads(claude_response)
-                pymol_commands = response_data['commands']
-                explanation = response_data['explanation']
-                pymol_results = execute_pymol_commands(pymol_commands)
 
-                # Save the current state as a PDB file
-                pdb_dir = os.path.join(settings.BASE_DIR, 'claude_app', 'static', 'pdb_files')
-                os.makedirs(pdb_dir, exist_ok=True)
-                pdb_filename = f'{current_pdb_id}_modified.pdb'
-                pdb_path = os.path.join(pdb_dir, pdb_filename)
-                pymol.do(f"save {pdb_path}")
+                # Update query history and chat history
+                query_history.append({'query': query, 'response': response_data['explanation']})
+                chat_history.append({'role': 'user', 'content': query})
+                chat_history.append({'role': 'assistant', 'content': response_data['explanation']})
 
-                # Update query history
-                query_history.append({
-                    'query': query,
-                    'explanation': explanation,
-                    'commands': pymol_commands
-                })
                 cache.set('query_history', query_history)
-
-                # Update chat history
-                chat_history.append({
-                    'role': 'user',
-                    'content': query
-                })
-                chat_history.append({
-                    'role': 'assistant',
-                    'content': explanation,
-                    'commands': pymol_commands
-                })
                 cache.set('chat_history', chat_history)
 
                 return JsonResponse({
-                    'explanation': explanation,
-                    'pymol_results': pymol_results,
-                    'current_pdb_id': current_pdb_id,
-                    'pdb_path': f'/static/pdb_files/{pdb_filename}',
+                    'success': True,
+                    'claude_response': response_data['explanation'],
+                    'commands': response_data['commands'],
                     'chat_history': chat_history
                 })
             except json.JSONDecodeError:
-                return JsonResponse({'error': 'Invalid response from Claude'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Error parsing JSON response from Claude'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid form data'})
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+def execute_commands(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        commands = data.get('commands', [])
+
+        python_commands = [cmd['command'] for cmd in commands if cmd['type'] == 'python']
+        pymol_commands = [cmd['command'] for cmd in commands if cmd['type'] == 'pymol']
+
+        python_results = execute_python_commands(python_commands)
+        pymol_results = execute_pymol_commands(pymol_commands)
+
+        all_results = python_results + pymol_results
+
+        return JsonResponse({
+            'success': True,
+            'results': all_results
+        })
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 def execute_pymol_commands(commands):
     results = []
@@ -127,4 +118,15 @@ def execute_pymol_commands(commands):
         except Exception as e:
             print(e)
             results.append(f"Command: {cmd}\nError: {str(e)}")
+    return results
+
+def execute_python_commands(commands):
+    results = []
+    for cmd in commands:
+        try:
+            exec(cmd)
+            results.append(f"Python Command: {cmd}")
+        except Exception as e:
+            print(e)
+            results.append(f"Python Command: {cmd}\nError: {str(e)}")
     return results

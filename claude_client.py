@@ -8,8 +8,6 @@ import os
 from PyPDF2 import PdfReader
 import tiktoken
 
-
-
 class ClaudeClient:
     def __init__(self, template_file=None, max_tokens=4096):
         self.template = None
