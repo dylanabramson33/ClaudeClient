@@ -1,0 +1,463 @@
+{% extends "claude_app/base.html" %}
+{% load static %}
+
+{% block content %}
+{% csrf_token %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css" />
+<div class="container-fluid d-flex flex-column vh-100">
+    <div class="row query-row">
+        <div class="col-12">
+            <form id="query-form" method="post" class="query-form">
+                {% csrf_token %}
+                {{ query_form.query }}
+                <button type="submit" class="btn btn-primary">Submit Query</button>
+            </form>
+	    <div id="loading-spinner" class="spinner-border text-primary" role="status" style="display: none;">
+    		<span class="sr-only">Loading...</span>
+	    </div>
+        </div>
+    </div>
+    <div class="row flex-grow-1 content-row">
+        <div class="col-md-6">
+            <div id="chat-history" class="chat-container"></div>
+        </div>
+        <div class="col-md-6">
+            <div id="staging-section" class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="mb-0">Generated Commands</h3>
+                </div>
+                <div class="card-body">
+                    <div id="editable-commands">
+                        <div class="command-group">
+                            <h4 class="text-muted d-flex justify-content-between align-items-center">
+                                Commands
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary add-command" data-type="python">
+                                        <i class="fas fa-plus"></i> Add Python Command
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success add-command" data-type="pymol">
+                                        <i class="fas fa-plus"></i> Add PyMOL Command
+                                    </button>
+                                </div>
+                            </h4>
+                            <div class="command-list">
+                                <!-- Python and PyMOL commands will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button id="accept-commands" class="btn btn-success">
+                            <i class="fas fa-check mr-2"></i>Accept and Run Commands
+                        </button>
+                        <button id="reject-commands" class="btn btn-outline-danger ml-2">
+                            <i class="fas fa-times mr-2"></i>Reject Commands
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/python/python.min.js"></script>
+<script>
+$(document).ready(function() {
+    var md = window.markdownit();
+
+    $.ajaxSetup({
+        headers: { "X-CSRFToken": '{{ csrf_token }}' }
+    });
+
+    $('#load-pdb-form').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: '{% url "load_pdb" %}',
+            type: 'post',
+            data: $(this).serialize(),
+            success: function(data) {
+                alert(data.message);
+                $('#chat-history').empty();
+            }
+        });
+    });
+    $('#query-form').on('submit', function(e) {
+    e.preventDefault();
+    var $form = $(this);
+    var $submitButton = $form.find('button[type="submit"]');
+    var $loadingSpinner = $('#loading-spinner');
+    
+    // Disable the form and show the spinner
+    $form.find('input').prop('disabled', true);
+    $submitButton.prop('disabled', true).addClass('disabled-button');
+    $loadingSpinner.show();
+
+    $.ajax({
+        url: '{% url "query_claude_and_run_pymol" %}',
+        type: 'post',
+        data: $form.serialize(),
+        success: function(data) {
+            updateChatHistory(data.chat_history, data.commands);
+            if (data.commands && data.commands.length > 0) {
+                displayEditableCommands(data.commands);
+                $('#results-section').hide();
+                $('#staging-section').show();
+            } else {
+                $('#staging-section').hide();
+                $('#results-section').hide();
+            }
+        },
+        error: function() {
+            alert('An error occurred while processing your query.');
+        },
+        complete: function() {
+            // Re-enable the form and hide the spinner
+            $form.find('input').prop('disabled', false);
+            $submitButton.prop('disabled', false).removeClass('disabled-button');
+            $loadingSpinner.hide();
+        }
+    });
+});
+
+    function displayEditableCommands(commands) {
+        var $commandList = $('#editable-commands .command-list');
+        
+        $commandList.empty();
+
+        commands.forEach(function(cmd, index) {
+            var $commandDiv = createCommandItem(cmd.type, cmd.command);
+            $commandList.append($commandDiv);
+        });
+    }
+
+    function createCommandItem(type, command = '') {
+        var $commandDiv = $('<div class="command-item"></div>');
+        if (type === 'pymol') {
+            $commandDiv.addClass('pymol-command');
+        }
+        
+        var $commandHeader = $('<div class="command-header"></div>');
+        var $typeLabel = $('<span class="badge"></span>').text(type);
+        var $deleteButton = $('<button class="delete-command"><i class="fas fa-trash-alt"></i></button>');
+        $commandHeader.append($typeLabel).append($deleteButton);
+        
+        var $editorContainer = $('<div class="editor-container"></div>');
+        $editorContainer.css('height', 'auto');
+
+        $commandDiv.append($commandHeader).append($editorContainer);
+
+        if (type === 'python') {
+            $typeLabel.addClass('bg-primary text-white');
+        } else if (type === 'pymol') {
+            $typeLabel.addClass('bg-success text-white');
+        }
+
+        $deleteButton.on('click', function() {
+            $commandDiv.fadeOut(300, function() { $(this).remove(); });
+        });
+
+        var editor = CodeMirror($editorContainer[0], {
+            mode: 'python',
+            lineNumbers: true,
+            theme: 'default',
+            viewportMargin: Infinity,
+            height: 'auto',
+            extraKeys: {
+                "Ctrl-Enter": function(instance) {
+                    instance.save();
+                    $('#accept-commands').click();
+                }
+            }
+        });
+
+        $commandDiv.data('editor', editor);
+
+        $commandDiv.updateCommand = function(newCommand) {
+            editor.setValue(newCommand);
+            setTimeout(function() {
+                editor.refresh();
+            }, 1);
+        };
+
+        $commandDiv.updateCommand(command);
+
+        return $commandDiv;
+    }
+
+    $('.add-command').on('click', function() {
+        var type = $(this).data('type');
+        var $newCommand = createCommandItem(type);
+        $('#editable-commands .command-list').append($newCommand);
+        $newCommand.hide().fadeIn();
+    });
+
+    $('#accept-commands').on('click', function() {
+        var commands = [];
+        $('#editable-commands .command-item').each(function() {
+            var type = $(this).find('.badge').text();
+            var editor = $(this).data('editor');
+            var command = editor.getValue();
+            if (command.trim() !== '') {
+                commands.push({type: type, command: command});
+            }
+        });
+
+        $.ajax({
+            url: '{% url "execute_commands" %}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({commands: commands}),
+            success: function(response) {
+                if (response.success) {
+                    $('#execution-results').text(response.results.join('\n'));
+                    $('#results-section').show();
+                    $('#staging-section').hide();
+                    
+                    var executedCommandsMessage = {
+                        role: 'assistant',
+                        content: "Executed commands:\n\n```python\n" + commands.map(cmd => `${cmd.type}: ${cmd.command}`).join('\n') + "\n```"
+                    };
+                    updateChatHistory([executedCommandsMessage], commands);
+                } else {
+                    alert('Error executing commands: ' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error:", error);
+                alert('An error occurred while executing commands.');
+            }
+        });
+    });
+
+    $('#reject-commands').on('click', function() {
+        $('#editable-commands .command-list').empty();
+    });
+
+    function updateChatHistory(chatHistory, commands) {
+        var chatContainer = $('#chat-history');
+        console.log(commands);
+        chatHistory.forEach(function(message, index) {
+            var messageHtml = '<div class="message ' + (message.role === 'user' ? 'user-message' : 'assistant-message') + '">' +
+                '<div class="message-header">' +
+                '<span class="message-role">' + message.role.charAt(0).toUpperCase() + message.role.slice(1) + '</span>' +
+                '<span class="message-time">' + new Date().toLocaleTimeString() + '</span>' +
+                '</div>' +
+                '<div class="message-content">' + md.render(message.content) + '</div>';
+            
+            if (message.role === 'assistant' && commands && commands.length > 0) {
+                var commandsHtml = "<div class='message-commands'><pre class='command-pre'>";
+                commands.forEach(function(cmd) {
+                    if (cmd.type === 'pymol') {
+                        commandsHtml += "<span class='pymol-command'>" + cmd.type + ": " + escapeHtml(cmd.command) + "</span>\n";
+                    } else {
+                        commandsHtml += "```python\n" + cmd.type + ": " + escapeHtml(cmd.command) + "\n```";
+                    }
+                });
+                commandsHtml += "</pre></div>";
+                messageHtml += commandsHtml;
+            }
+            
+            messageHtml += '</div>';
+            chatContainer.append(messageHtml);
+        });
+        chatContainer.scrollTop(chatContainer[0].scrollHeight);
+    }
+
+    function escapeHtml(unsafe) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+});
+</script>
+
+<style>
+
+#loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+}
+
+.disabled-button {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.container-fluid {
+    padding-top: 20px;
+}
+
+.query-row {
+    margin-bottom: 30px;
+}
+
+.query-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    max-width: 1000px;
+    height: 60px;
+    margin: 0 auto;
+    border-color: gray;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(1, 1, 1, 0.1);
+}
+
+.form-control  {
+    height: 100%;
+    width: 102%;
+    
+    resize: none;
+    padding: 15px;
+    border: none;
+}
+
+.form-control:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: none !important;
+}
+
+
+.query-form button {
+    width: 120px;
+    height: 100%;
+    border: none;
+    background-color: #4a90e2;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.query-form button:hover {
+    background-color: #357abd;
+}
+
+.content-row {
+    height: calc(100vh - 110px);
+}
+
+.chat-container, #staging-section {
+    height: 100%;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.message {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    max-width: 80%;
+}
+
+.user-message {
+    background-color: #e3f2fd;
+    margin-left: auto;
+}
+
+.assistant-message {
+    background-color: #fff;
+    margin-right: auto;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.message-content {
+    line-height: 1.5;
+}
+
+.message-content p {
+    margin: 0 0 10px 0;
+}
+
+.message-content p:last-child {
+    margin-bottom: 0;
+}
+
+#staging-section {
+    height: 100%;
+    overflow-y: auto;
+}
+
+#staging-section .card-header {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+#editable-commands .command-group {
+    margin-bottom: 25px;
+}
+
+.message-commands .pymol-command {
+    background-color: #e9ecef;
+    padding: 2px 4px;
+    border-radius: 2px;
+}
+
+.message-commands .command-pre {
+    background-color: #f8f8f8;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+
+.btn-success, .btn-outline-danger {
+    padding: 8px 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.CodeMirror {
+    height: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.CodeMirror-scroll {
+    max-height: 200px;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}

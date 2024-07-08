@@ -8,10 +8,10 @@ import os
 from django.core.cache import cache
 from django.conf import settings
 
-pymol = xmlrpc.client.ServerProxy('http://localhost:9123')
+cmd = xmlrpc.client.ServerProxy('http://localhost:9123')
 # Add this function to get the template path
 def get_template_path():
-    return "/Users/dylanabramson/Desktop/Claude/templates/pymol.jinja"
+    return "/Users/dylanabramson/Desktop/ClaudePyMOLClient/templates/pymol.jinja"
 
 def pymol_interface(request):
     load_form = LoadPDBForm()
@@ -29,12 +29,12 @@ def load_pdb(request):
         if form.is_valid():
             pdb_id = form.cleaned_data['pdb_id']
             try:
-                pymol.do(f"fetch {pdb_id}")
+                cmd.do(f"fetch {pdb_id}")
                 pdb_dir = os.path.join(settings.BASE_DIR, 'claude_app', 'static', 'pdb_files')
                 os.makedirs(pdb_dir, exist_ok=True)
                 pdb_filename = f'{pdb_id}.pdb'
                 pdb_path = os.path.join(pdb_dir, pdb_filename)
-                pymol.do(f"save {pdb_path}")
+                cmd.do(f"save {pdb_path}")
                 
                 cache.set('current_pdb_id', pdb_id)
                 cache.set('current_pdb_path', pdb_path)
@@ -44,6 +44,7 @@ def load_pdb(request):
                 return JsonResponse({'success': True, 'message': f'PDB {pdb_id} loaded successfully'})
             except Exception as e:
                 return JsonResponse({'success': False, 'message': str(e)})
+        print(form.errors, " HERE ARE THE ERRORS")
     return JsonResponse({'success': False, 'message': 'Invalid request'})
 
 def query_claude_and_run_pymol(request):
@@ -60,7 +61,6 @@ def query_claude_and_run_pymol(request):
 
             context = {
                 'query': query,
-                'pdb_id': current_pdb_id,
                 'query_history': query_history,
             }
 
@@ -93,14 +93,7 @@ def execute_commands(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         commands = data.get('commands', [])
-
-        python_commands = [cmd['command'] for cmd in commands if cmd['type'] == 'python']
-        pymol_commands = [cmd['command'] for cmd in commands if cmd['type'] == 'pymol']
-
-        python_results = execute_python_commands(python_commands)
-        pymol_results = execute_pymol_commands(pymol_commands)
-
-        all_results = python_results + pymol_results
+        all_results = run_commands(commands)
 
         return JsonResponse({
             'success': True,
@@ -109,24 +102,27 @@ def execute_commands(request):
     else:
         return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
-def execute_pymol_commands(commands):
-    results = []
-    for cmd in commands:
-        try:
-            pymol.do(cmd)
-            results.append(f"Command: {cmd}")
-        except Exception as e:
-            print(e)
-            results.append(f"Command: {cmd}\nError: {str(e)}")
-    return results
+def execute_pymol_command(command):
+    try:
+        cmd.do(command)
+        return f"Command: {command}"
+    except Exception as e:
+        print(e)
+        return f"Command: {command}\nError: {str(e)}"
 
-def execute_python_commands(commands):
+def execute_python_commands(command):
+    try:
+        exec(command)
+        return f"Python Command: {command}"
+    except Exception as e:
+        print(e)
+        return f"Python Command: {command}\nError: {str(e)}"
+
+def run_commands(commands):
     results = []
-    for cmd in commands:
-        try:
-            exec(cmd)
-            results.append(f"Python Command: {cmd}")
-        except Exception as e:
-            print(e)
-            results.append(f"Python Command: {cmd}\nError: {str(e)}")
+    for command in commands:
+        if command['type'] == 'python':
+            results.append(execute_python_command(command['command']))
+        elif command['type'] == 'pymol':
+            results.append(execute_pymol_command(command['command']))
     return results
