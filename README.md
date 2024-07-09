@@ -19,7 +19,7 @@ To set up this project, follow these steps:
 1. Clone the repository:
   ```
   git clone https://github.com/yourusername/pymol-claude-django-interface.git
-  cd pymol-claude-django-interface
+  cd ClaudePyMOLClient
   ```
 2. Create a conda environment and install dependencies:
   ```
