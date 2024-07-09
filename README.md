@@ -9,7 +9,6 @@ This Django app allows users to:
 - Visualize molecules using PyMOL
 - Interact with PyMOL using natural language commands processed by Claude AI
 - Perform advanced PyMOL operations through simple text instructions
-- Save and share molecular visualizations and command histories
 
 The app integrates Django's web framework, PyMOL's molecular visualization tools, and Claude AI's natural language processing capabilities. This combination allows researchers and students to work with molecular structures using intuitive language commands.
 
