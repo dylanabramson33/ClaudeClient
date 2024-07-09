@@ -47,5 +47,6 @@ To set up this project, follow these steps:
 8. Run pyMOL with xml-rpc server (open new terminal)
   ```
   pymol -R
-  ``` 
+  ```
+9. Navigate in browser to http://127.0.0.1:8000/
    
