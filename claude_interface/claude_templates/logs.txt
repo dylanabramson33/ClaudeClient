@@ -1,0 +1,723 @@
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+
+User: Generate PyMOL commands or Python code for the following request: load the covid spike protein
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "This command will load the SARS-CoV-2 spike protein structure from the Protein Data Bank (PDB) into PyMOL. The PDB ID '6VXX' represents one of the commonly used structures for the COVID-19 spike protein in its prefusion conformation.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 6VXX"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: color the domain of the spike protein that binds to ACE2
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will load the SARS-CoV-2 spike protein structure, select the receptor-binding domain (RBD) that interacts with ACE2, color it distinctly, and display the protein as a cartoon representation.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 6vxx"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"},
+    {"type": "pymol", "command": "color gray80"},
+    {"type": "pymol", "command": "select rbd, chain A and resi 319-541"},
+    {"type": "pymol", "command": "color red, rbd"},
+    {"type": "pymol", "command": "zoom"},
+    {"type": "pymol", "command": "deselect"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: color the protein like the Albanian flag
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will color the protein like the Albanian flag, which is primarily red with a black double-headed eagle in the center. We'll color the majority of the protein red and create a black eagle-like shape in the center using a selection.",
+  "commands": [
+    {"type": "pymol", "command": "color red, all"},
+    {"type": "pymol", "command": "select eagle, (resi 40-60 and name CA)"},
+    {"type": "pymol", "command": "color black, eagle"},
+    {"type": "pymol", "command": "show surface, all"},
+    {"type": "pymol", "command": "set surface_quality, 1"},
+    {"type": "pymol", "command": "set cartoon_fancy_helices, 1"},
+    {"type": "pymol", "command": "show cartoon, eagle"},
+    {"type": "pymol", "command": "zoom"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+: 
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: make background color white
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "This command will change the background color in PyMOL to white.",
+  "commands": [
+    {
+      "type": "pymol",
+      "command": "bg_color white"
+    }
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+
+User: Generate PyMOL commands or Python code for the following request: Load a protein involved in breast cancer
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will load the structure of BRCA1, a protein involved in breast cancer, from the Protein Data Bank (PDB) and display it as a cartoon representation.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1jm7"},
+    {"type": "pymol", "command": "as cartoon"},
+    {"type": "pymol", "command": "color spectrum"},
+    {"type": "pymol", "command": "zoom"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: make a surface plot of the protein
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will create a surface representation of the protein currently loaded in PyMOL. If no protein is loaded, you'll need to load one first using the 'fetch' or 'load' command.",
+  "commands": [
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show surface"},
+    {"type": "pymol", "command": "set surface_quality, 1"},
+    {"type": "pymol", "command": "set transparency, 0.2"},
+    {"type": "pymol", "command": "color white, all"},
+    {"type": "pymol", "command": "util.spectrum(selection='all', palette='rainbow')"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: color the surface like the British flag
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will create a surface representation of the currently loaded molecule and color it to resemble the British flag (red, white, and blue). We'll use PyMOL's surface coloring capabilities and create three selection groups to achieve this effect.",
+  "commands": [
+    {"type": "pymol", "command": "show surface"},
+    {"type": "pymol", "command": "set surface_quality, 1"},
+    {"type": "pymol", "command": "select red_stripes, (x > 0 and y > 0) or (x < 0 and y < 0)"},
+    {"type": "pymol", "command": "select blue_background, not red_stripes and not ((abs(x) < 2 and y > 0) or (abs(y) < 2 and x > 0))"},
+    {"type": "pymol", "command": "select white_cross, (abs(x) < 2 and y > 0) or (abs(y) < 2 and x > 0)"},
+    {"type": "pymol", "command": "color red, red_stripes"},
+    {"type": "pymol", "command": "color blue, blue_background"},
+    {"type": "pymol", "command": "color white, white_cross"},
+    {"type": "pymol", "command": "deselect"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+
+User: Generate PyMOL commands or Python code for the following request: load a protein ternary complex
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will load a protein ternary complex (PDB ID: 1EQZ, which is a ternary complex of DNA polymerase beta), display it as a cartoon representation, and color each chain differently for better visualization.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1eqz"},
+    {"type": "pymol", "command": "as cartoon"},
+    {"type": "pymol", "command": "color cyan, chain A"},
+    {"type": "pymol", "command": "color magenta, chain B"},
+    {"type": "pymol", "command": "color yellow, chain C"},
+    {"type": "pymol", "command": "color orange, chain D"},
+    {"type": "pymol", "command": "show sticks, organic"},
+    {"type": "pymol", "command": "color green, organic"},
+    {"type": "pymol", "command": "zoom"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+
+User: Generate PyMOL commands or Python code for the following request: load a ternary complex
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will load a ternary complex (PDB ID: 1EFW, which is a complex of DNA polymerase beta with DNA and dCTP) and display it with different colors for each component.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1EFW"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon, polymer"},
+    {"type": "pymol", "command": "show sticks, organic"},
+    {"type": "pymol", "command": "color cyan, chain A"},
+    {"type": "pymol", "command": "color magenta, chain B"},
+    {"type": "pymol", "command": "color yellow, chain C"},
+    {"type": "pymol", "command": "color orange, organic"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: color the complex like the American flag
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will color the complex like the American flag, using red, white, and blue colors. We'll use the 'color' command to assign colors to different selections of the complex.",
+  "commands": [
+    {"type": "pymol", "command": "color red, (resi 1-33)"},
+    {"type": "pymol", "command": "color white, (resi 34-66)"},
+    {"type": "pymol", "command": "color blue, (resi 67-100)"},
+    {"type": "pymol", "command": "color red, (resi 101-133)"},
+    {"type": "pymol", "command": "color white, (resi 134-166)"},
+    {"type": "pymol", "command": "color blue, (resi 167-200)"},
+    {"type": "pymol", "command": "bg_color white"},
+    {"type": "pymol", "command": "set cartoon_fancy_helices, 1"},
+    {"type": "pymol", "command": "set cartoon_fancy_sheets, 1"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: questionable job the proteins should also be colored
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: I apologize, but the request "questionable job the proteins should also be colored" is not clear or specific enough to generate meaningful PyMOL commands or Python code. To provide accurate and helpful commands, I would need more detailed information about what you want to achieve with the protein visualization. 
+
+However, I can provide a general set of commands for loading and coloring proteins in PyMOL. Here's a JSON-formatted response with some basic commands:
+
+{
+  "explanation": "These commands will load a sample protein (PDB ID: 1abc), color it by chain, and display it as a cartoon representation.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "as cartoon"},
+    {"type": "pymol", "command": "color chainbows"},
+    {"type": "pymol", "command": "zoom"},
+    {"type": "pymol", "command": "ray"}
+  ]
+}
+
+This set of commands will load a protein structure, color it by chain using a rainbow gradient, and display it as a cartoon. If you have a specific protein or coloring scheme in mind, please provide more details, and I'll be happy to generate more tailored commands.
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+
+User: Generate PyMOL commands or Python code for the following request: load a protac complex
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will load a PROTAC complex structure from the PDB database, assuming the PDB ID '7S4E' which is a known PROTAC complex. The structure will be displayed as a cartoon representation with the protein colored by chain and the ligand highlighted.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 7S4E"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"},
+    {"type": "pymol", "command": "color chainbow"},
+    {"type": "pymol", "command": "select ligand, organic"},
+    {"type": "pymol", "command": "show sticks, ligand"},
+    {"type": "pymol", "command": "color yellow, ligand"},
+    {"type": "pymol", "command": "zoom ligand"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+
+User: Generate PyMOL commands or Python code for the following request: load a complex of a PROTAC
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will load a complex of a PROTAC (PROteolysis TArgeting Chimera) with its target protein and E3 ligase. We'll use a known PROTAC complex (PDB ID: 6HAY) as an example, which includes a PROTAC molecule bound to the BRD4 protein and the E3 ligase CRBN.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 6HAY"},
+    {"type": "pymol", "command": "remove solvent"},
+    {"type": "pymol", "command": "as cartoon"},
+    {"type": "pymol", "command": "color cyan, chain A"},
+    {"type": "pymol", "command": "color magenta, chain B"},
+    {"type": "pymol", "command": "select protac, organic"},
+    {"type": "pymol", "command": "show sticks, protac"},
+    {"type": "pymol", "command": "color yellow, protac"},
+    {"type": "pymol", "command": "zoom"},
+    {"type": "pymol", "command": "label chain A and name CA and resi 1, \"BRD4\""},
+    {"type": "pymol", "command": "label chain B and name CA and resi 1, \"CRBN\""},
+    {"type": "pymol", "command": "label protac, \"PROTAC\""}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: remove the stupid labels
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "This command will remove all labels from the current PyMOL session, effectively hiding any text annotations that might be present on the structure.",
+  "commands": [
+    {"type": "pymol", "command": "label all, \"\""}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: color the ligands red
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will select all ligands in the current PyMOL session and color them red.",
+  "commands": [
+    {"type": "pymol", "command": "select ligands, organic"},
+    {"type": "pymol", "command": "color red, ligands"},
+    {"type": "pymol", "command": "deselect"}
+  ]
+}
+
+================================================================================
+
+Query: You are an expert in PyMOL and molecular visualization. 
+Your task is to generate either PyMOL commands or Python code based on user queries. 
+Python code should be blocks that are independently executable with exec()
+Provide your response as a JSON object with two keys: 'explanation' for a brief explanation of the commands or code, and 'commands' for a list of command objects.
+
+The following is a query history, which is a list of previous messages exchanged between the user and the assistant. 
+Each message is prefixed with either "User:" or "Assistant:" to indicate who sent it. 
+Use this history to maintain context for the current query.
+
+
+: 
+
+: 
+
+: 
+
+
+User: Generate PyMOL commands or Python code for the following request: color the proteins like the american flag
+
+Remember to format your response as a JSON object with 'explanation' and 'commands' keys. The 'commands' key should contain a list of objects, each with 'type' and 'command' fields. Here's an example of the expected format:
+
+{
+  "explanation": "These commands will load a protein structure, color it by secondary structure, and display it as a cartoon.",
+  "commands": [
+    {"type": "pymol", "command": "fetch 1abc"},
+    {"type": "pymol", "command": "color_ss helix red"},
+    {"type": "pymol", "command": "color_ss sheet yellow"},
+    {"type": "pymol", "command": "color_ss loop green"},
+    {"type": "pymol", "command": "hide everything"},
+    {"type": "pymol", "command": "show cartoon"}
+  ]
+}
+
+Please provide your response in this JSON format, specifying the appropriate type ("pymol" or "python") for each command.
+Response: {
+  "explanation": "These commands will color the proteins to resemble the American flag. We'll use red, white, and blue colors and create stripes by selecting residues in groups. Note that this assumes a protein is already loaded in PyMOL.",
+  "commands": [
+    {"type": "pymol", "command": "color white, all"},
+    {"type": "pymol", "command": "select stripe1, (resi 1-20 or resi 41-60 or resi 81-100)"},
+    {"type": "pymol", "command": "color red, stripe1"},
+    {"type": "pymol", "command": "select stripe2, (resi 21-40 or resi 61-80 or resi 101-120)"},
+    {"type": "pymol", "command": "color blue, stripe2"},
+    {"type": "pymol", "command": "select cornerbox, (resi 1-40 and (x < 0 and y > 0))"},
+    {"type": "pymol", "command": "color blue, cornerbox"},
+    {"type": "pymol", "command": "select stars, (resi 1-5 or resi 11-15 or resi 21-25 or resi 31-35) and cornerbox"},
+    {"type": "pymol", "command": "color white, stars"},
+    {"type": "pymol", "command": "deselect"}
+  ]
+}
+
+================================================================================
+

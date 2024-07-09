@@ -72,19 +72,6 @@ $(document).ready(function() {
     $.ajaxSetup({
         headers: { "X-CSRFToken": '{{ csrf_token }}' }
     });
-
-    $('#load-pdb-form').on('submit', function(e) {
-        e.preventDefault();
-        $.ajax({
-            url: '{% url "load_pdb" %}',
-            type: 'post',
-            data: $(this).serialize(),
-            success: function(data) {
-                alert(data.message);
-                $('#chat-history').empty();
-            }
-        });
-    });
     $('#query-form').on('submit', function(e) {
     e.preventDefault();
     var $form = $(this);
@@ -214,14 +201,14 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     $('#execution-results').text(response.results.join('\n'));
-                    $('#results-section').show();
-                    $('#staging-section').hide();
                     
                     var executedCommandsMessage = {
                         role: 'assistant',
                         content: "Executed commands:\n\n```python\n" + commands.map(cmd => `${cmd.type}: ${cmd.command}`).join('\n') + "\n```"
                     };
                     updateChatHistory([executedCommandsMessage], commands);
+                    $('#editable-commands .command-list').empty();
+
                 } else {
                     alert('Error executing commands: ' + response.message);
                 }

@@ -18,7 +18,7 @@ class ClaudeClient:
         self.client = anthropic.Anthropic()
         self.max_tokens = max_tokens
         self.tokenizer = tiktoken.encoding_for_model("gpt-4o")  # A close approximation for Claude
-        self.logs_file = "./logs.txt"
+        self.logs_file = os.path.join(os.path.dirname(template_file), "logs.txt") if template_file else "logs.txt"
 
     def build_query(self, **kwargs):
         if self.template:
@@ -28,7 +28,6 @@ class ClaudeClient:
 
     def query(self, **kwargs):
         q = self.build_query(**kwargs)
-        print(q)
         response = self.client.messages.create(
             model="claude-3-5-sonnet-20240620",
             max_tokens=self.max_tokens,
@@ -147,11 +146,11 @@ def main():
         if args.json:
             parsed_json = client.parse_json(response)
             if parsed_json:
-                print(json.dumps(parsed_json, indent=2))
+                return json.dumps(parsed_json, indent=2)
             else:
                 sys.exit(1)
         else:
-            print(response)
+            return response
 
 if __name__ == "__main__":
     main()

@@ -11,7 +11,12 @@ from django.conf import settings
 cmd = xmlrpc.client.ServerProxy('http://localhost:9123')
 # Add this function to get the template path
 def get_template_path():
-    return "/Users/dylanabramson/Desktop/ClaudePyMOLClient/templates/pymol.jinja"
+    # Get the path to the template file
+    return os.path.join(
+        settings.BASE_DIR, 
+        'claude_interface', 
+        'claude_templates', 
+        'pymol.jinja')
 
 def pymol_interface(request):
     load_form = LoadPDBForm()
@@ -22,30 +27,6 @@ def pymol_interface(request):
         'query_form': query_form,
         'chat_history': chat_history
     })
-
-def load_pdb(request):
-    if request.method == 'POST':
-        form = LoadPDBForm(request.POST)
-        if form.is_valid():
-            pdb_id = form.cleaned_data['pdb_id']
-            try:
-                cmd.do(f"fetch {pdb_id}")
-                pdb_dir = os.path.join(settings.BASE_DIR, 'claude_app', 'static', 'pdb_files')
-                os.makedirs(pdb_dir, exist_ok=True)
-                pdb_filename = f'{pdb_id}.pdb'
-                pdb_path = os.path.join(pdb_dir, pdb_filename)
-                cmd.do(f"save {pdb_path}")
-                
-                cache.set('current_pdb_id', pdb_id)
-                cache.set('current_pdb_path', pdb_path)
-                # Clear previous query history and chat history when loading a new PDB
-                cache.set('query_history', [])
-                cache.set('chat_history', [])
-                return JsonResponse({'success': True, 'message': f'PDB {pdb_id} loaded successfully'})
-            except Exception as e:
-                return JsonResponse({'success': False, 'message': str(e)})
-        print(form.errors, " HERE ARE THE ERRORS")
-    return JsonResponse({'success': False, 'message': 'Invalid request'})
 
 def query_claude_and_run_pymol(request):
     if request.method == 'POST':
@@ -110,7 +91,7 @@ def execute_pymol_command(command):
         print(e)
         return f"Command: {command}\nError: {str(e)}"
 
-def execute_python_commands(command):
+def execute_python_command(command):
     try:
         exec(command)
         return f"Python Command: {command}"
