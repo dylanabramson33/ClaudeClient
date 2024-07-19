@@ -1,16 +1,13 @@
 # ClaudePyMOLClient
 
-This Django application provides a web interface for interacting with PyMOL using Claude AI commands, combining molecular visualization with natural language processing.
+ClaudePyMOLClient provides a web interface for interacting with PyMOL using Claude AI commands
 
 ## Project Overview
-
-This Django app allows users to:
+With ClaudePyMOLClient we can:
 - Upload molecular structure files
 - Visualize molecules using PyMOL
 - Interact with PyMOL using natural language commands processed by Claude AI
 - Perform advanced PyMOL operations through simple text instructions
-
-The app integrates Django's web framework, PyMOL's molecular visualization tools, and Claude AI's natural language processing capabilities. This combination allows researchers and students to work with molecular structures using intuitive language commands.
 
 ## Installation
 
